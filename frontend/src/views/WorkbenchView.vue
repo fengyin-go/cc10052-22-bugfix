@@ -70,6 +70,9 @@
       </tbody>
     </table>
 
+    <SchedulerPanel v-if="meta.key === 'window_scheduler'" :plans="rows" @changed="reload" />
+    <ComputePanel v-if="meta.key === 'metric_compute'" :jobs="rows" :plans="schedulerPlans" @changed="reload" />
+
     <div v-if="showCreate" class="modal-backdrop" data-testid="create-modal">
       <form class="modal" @submit.prevent="submitCreate">
         <h3>登记{{ meta.entity }}</h3>
@@ -104,10 +107,13 @@ import {
   runAction as applyAction,
 } from '@/api/backend-service'
 import type { EntryRow } from '@/data/types'
+import ComputePanel from './ComputePanel.vue'
+import SchedulerPanel from './SchedulerPanel.vue'
 
 const props = defineProps<{ moduleKey: string }>()
 const meta = moduleMeta(props.moduleKey)
 const rows = ref<EntryRow[]>([])
+const schedulerPlans = ref<EntryRow[]>([])
 const total = ref(0)
 const errorMessage = ref('')
 const filters = ref<Record<string, string>>({})
@@ -182,6 +188,10 @@ async function reload() {
     const payload = await listEntries(meta.key, filters.value)
     rows.value = payload.items
     total.value = payload.total
+    if (meta.key === 'metric_compute') {
+      const planPayload = await listEntries('window_scheduler')
+      schedulerPlans.value = planPayload.items
+    }
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '业务列表读取失败'
   }

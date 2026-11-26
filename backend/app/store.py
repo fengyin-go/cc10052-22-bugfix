@@ -10,10 +10,16 @@ from app.seed import SEED_ROWS
 
 
 class Store:
+    # 领域扩展表：窗口作业回执（调度侧受理凭证）与计算批次明细（作业侧领取凭证），
+    # 两边凭同一回执编号定位同一次有效计算。
+    EXTRA_TABLES = ("window_dispatch_receipt", "metric_compute_batch")
+
     def __init__(self) -> None:
         self._tables: dict[str, list[dict[str, Any]]] = {
             name: [dict(row) for row in rows] for name, rows in SEED_ROWS.items()
         }
+        for name in self.EXTRA_TABLES:
+            self._tables.setdefault(name, [])
 
     def module_names(self) -> list[str]:
         return sorted(self._tables)
